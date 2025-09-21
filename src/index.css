@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 45 100% 98%;
+    --foreground: 220 13% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 13% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 13% 13%;
+
+    --primary: 35 91% 55%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 45 29% 93%;
+    --secondary-foreground: 220 13% 13%;
+
+    --muted: 45 29% 93%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 170 76% 55%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 45 20% 88%;
+    --input: 45 20% 88%;
+    --ring: 35 91% 55%;
+
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 98%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 98%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 0 0% 98%;
+
+    --gujarati-saffron: 35 91% 55%;
+    --gujarati-orange: 25 95% 53%;
+    --gujarati-green: 170 76% 55%;
+    --gujarati-blue: 199 89% 48%;
+    
+    --gradient-primary: linear-gradient(135deg, hsl(35 91% 55%), hsl(25 95% 53%));
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 36%), hsl(170 76% 55%));
+    --gradient-info: linear-gradient(135deg, hsl(199 89% 48%), hsl(220 89% 60%));
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 220 13% 9%;
+    --foreground: 45 100% 98%;
+
+    --card: 220 13% 11%;
+    --card-foreground: 45 100% 98%;
+
+    --popover: 220 13% 11%;
+    --popover-foreground: 45 100% 98%;
+
+    --primary: 35 91% 55%;
+    --primary-foreground: 220 13% 9%;
+
+    --secondary: 220 13% 15%;
+    --secondary-foreground: 45 100% 98%;
+
+    --muted: 220 13% 15%;
+    --muted-foreground: 220 9% 65%;
+
+    --accent: 170 76% 55%;
+    --accent-foreground: 220 13% 9%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 45 100% 98%;
+
+    --border: 220 13% 20%;
+    --input: 220 13% 20%;
+    --ring: 35 91% 55%;
+
+    --success: 142 76% 45%;
+    --success-foreground: 220 13% 9%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 220 13% 9%;
+
+    --info: 199 89% 48%;
+    --info-foreground: 220 13% 9%;
+
+    --gujarati-saffron: 35 91% 55%;
+    --gujarati-orange: 25 95% 53%;
+    --gujarati-green: 170 76% 55%;
+    --gujarati-blue: 199 89% 48%;
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
