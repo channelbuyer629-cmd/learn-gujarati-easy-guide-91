@@ -532,13 +532,14 @@ const Practice = () => {
                                 </Button>
                               </div>
                             )}
-                            <div className="flex items-center justify-center gap-3 mb-3">
-                              <div className="text-5xl font-bold text-foreground">
-                                {item.english_content}
-                              </div>
-                              <div className="text-5xl font-bold text-foreground">
-                                {item.gujarati_content}
-                              </div>
+                            <div className="text-4xl font-bold text-primary mb-2">
+                              {item.gujarati_content}
+                            </div>
+                            <div className="text-sm text-secondary mb-2">
+                              {item.english_content}
+                            </div>
+                            <div className="text-xs text-muted-foreground mb-2">
+                              ({item.transliteration})
                             </div>
                             <div className="flex gap-2 mt-2">
                               <Button
