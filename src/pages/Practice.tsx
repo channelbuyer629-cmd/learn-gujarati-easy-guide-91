@@ -482,14 +482,11 @@ const Practice = () => {
                                     </Button>
                                   </div>
                                 )}
-                                <div className="text-4xl font-bold text-primary mb-2">
+                                <div className="text-5xl font-bold text-primary mb-2">
                                   {item.gujarati_content}
                                 </div>
-                                <div className="text-sm text-secondary mb-2">
+                                <div className="text-lg font-semibold text-secondary-foreground mb-2">
                                   {item.english_content}
-                                </div>
-                                <div className="text-xs text-muted-foreground mb-2">
-                                  ({item.transliteration})
                                 </div>
                                 <Button
                                   variant="outline"
