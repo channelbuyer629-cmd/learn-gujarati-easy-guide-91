@@ -6,7 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BookOpen, Volume2, Check, X, Edit, Plus, Trash2 } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { BookOpen, Volume2, Check, X, Edit, Plus, Trash2, Upload, FileSpreadsheet, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
@@ -42,6 +44,10 @@ const Practice = () => {
   const [isTeacher, setIsTeacher] = useState(false);
   const [editingItem, setEditingItem] = useState<BasicLearningItem | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
+  const [showCsvUploader, setShowCsvUploader] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvLoading, setCsvLoading] = useState(false);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [formData, setFormData] = useState({
     gujarati_content: '',
     english_content: '',
@@ -56,6 +62,8 @@ const Practice = () => {
     if (user) {
       fetchLearningProgress();
     }
+    // Reset word index when switching tabs
+    setCurrentWordIndex(0);
   }, [user, activeTab]);
 
   const checkUserRole = async () => {
@@ -313,6 +321,98 @@ const Practice = () => {
     }
   };
 
+  const handleCsvUpload = async () => {
+    if (!csvFile || !user || !isTeacher) {
+      toast({
+        title: "Error",
+        description: "Please select a CSV file",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setCsvLoading(true);
+    try {
+      const text = await csvFile.text();
+      const lines = text.trim().split('\n').filter(line => line.trim());
+      
+      let createdCount = 0;
+
+      for (let i = 1; i < lines.length; i++) {
+        // Parse CSV line properly handling quoted values
+        const values = [];
+        let currentValue = '';
+        let insideQuotes = false;
+        
+        for (let j = 0; j < lines[i].length; j++) {
+          const char = lines[i][j];
+          if (char === '"') {
+            insideQuotes = !insideQuotes;
+          } else if (char === ',' && !insideQuotes) {
+            values.push(currentValue.trim());
+            currentValue = '';
+          } else {
+            currentValue += char;
+          }
+        }
+        values.push(currentValue.trim());
+        
+        if (values.length < 3) continue;
+
+        const [gujaratiWord, englishWord, usageExample] = values;
+        
+        if (!gujaratiWord || !englishWord || !usageExample) continue;
+
+        const { error } = await supabase
+          .from('basic_learning')
+          .insert({
+            content_type: 'basic_word',
+            gujarati_content: gujaratiWord,
+            english_content: englishWord,
+            transliteration: usageExample,
+            difficulty_level: 1,
+            created_by: user.id
+          });
+
+        if (!error) {
+          createdCount++;
+        }
+      }
+
+      toast({
+        title: "Success",
+        description: `${createdCount} basic words uploaded successfully!`
+      });
+
+      setCsvFile(null);
+      setShowCsvUploader(false);
+      fetchBasicLearningItems();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setCsvLoading(false);
+    }
+  };
+
+  const navigateBasicWord = (direction: 'prev' | 'next') => {
+    const basicWords = basicItems.filter(item => item.content_type === 'basic_word');
+    let newIndex;
+    if (direction === 'next') {
+      newIndex = currentWordIndex < basicWords.length - 1 ? currentWordIndex + 1 : 0;
+      // Mark current word as learned when moving to next
+      if (basicWords[currentWordIndex]) {
+        markItemLearned(true);
+      }
+    } else {
+      newIndex = currentWordIndex > 0 ? currentWordIndex - 1 : basicWords.length - 1;
+    }
+    setCurrentWordIndex(newIndex);
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-6">
@@ -348,12 +448,25 @@ const Practice = () => {
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold text-primary">Basic Learning</h1>
           <div className="flex gap-2 items-center">
-            {isTeacher && (
+          {isTeacher && (
+            <div className="flex gap-2">
               <Button onClick={handleAddNew} size="sm" className="gap-2">
                 <Plus size={16} />
                 Add New
               </Button>
-            )}
+              {activeTab === 'basic_word' && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowCsvUploader(!showCsvUploader)} 
+                  size="sm" 
+                  className="gap-2"
+                >
+                  <Upload size={16} />
+                  Upload CSV
+                </Button>
+              )}
+            </div>
+          )}
             <Badge variant="secondary">
               {currentIndex + 1} / {basicItems.length}
             </Badge>
@@ -362,6 +475,65 @@ const Practice = () => {
             </Badge>
           </div>
         </div>
+
+        {/* CSV Uploader for Basic Words */}
+        {isTeacher && showCsvUploader && activeTab === 'basic_word' && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Upload className="h-5 w-5" />
+                Upload Basic Words CSV
+              </CardTitle>
+              <CardDescription>
+                Upload basic Gujarati words with English meanings and usage examples
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-4 bg-muted/30 rounded-lg">
+                <h4 className="font-medium mb-2">CSV Format Requirements:</h4>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p><strong>Columns (in exact order):</strong></p>
+                  <ol className="list-decimal list-inside space-y-1 mt-2">
+                    <li>Gujarati Word</li>
+                    <li>English Word</li>
+                    <li>Usage Example</li>
+                  </ol>
+                  <p className="mt-3"><strong>Example Format:</strong></p>
+                  <code className="block bg-background p-2 rounded text-xs mt-2">
+                    પાણી,Water,"પાણી જીવન માટે જરૂરી છે."
+                  </code>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="basic-csv-file">Select CSV File</Label>
+                <Input
+                  id="basic-csv-file"
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => setCsvFile(e.target.files?.[0] || null)}
+                  disabled={csvLoading}
+                />
+              </div>
+
+              {csvFile && (
+                <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+                  <FileSpreadsheet className="h-4 w-4" />
+                  <span className="text-sm">{csvFile.name}</span>
+                </div>
+              )}
+
+              <div className="flex gap-2">
+                <Button onClick={handleCsvUpload} disabled={csvLoading || !csvFile}>
+                  {csvLoading ? 'Uploading...' : 'Upload CSV'}
+                </Button>
+                <Button variant="outline" onClick={() => setShowCsvUploader(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Tabs value={activeTab} onValueChange={(value: any) => setActiveTab(value)}>
           <TabsList className="grid w-full grid-cols-3">
@@ -589,81 +761,107 @@ const Practice = () => {
                 </div>
               </div>
             ) : (
-              // Flashcard layout for basic words
-              <Card className="max-w-2xl mx-auto">
-                <CardHeader>
-                  <CardTitle className="text-center">
-                    {showAnswer ? "Learn & Practice" : getTabTitle(activeTab)}
-                  </CardTitle>
-                  <CardDescription className="text-center">
-                    {showAnswer ? "Practice pronunciation" : 'Learn words'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="text-center space-y-6">
-                  <div className="text-6xl font-bold text-primary min-h-[120px] flex items-center justify-center">
-                    {showAnswer ? (
-                      <div className="space-y-4">
-                        <div className="text-8xl">{currentItem?.gujarati_content}</div>
-                        <div className="text-3xl text-secondary">
-                          {currentItem?.english_content}
+              // Word Bank format for basic words
+              <div className="max-w-3xl mx-auto">
+                {(() => {
+                  const basicWords = basicItems.filter(item => item.content_type === 'basic_word');
+                  const currentWord = basicWords[currentWordIndex];
+                  const currentProgress = learningProgress.find(p => p.content_id === currentWord?.id);
+                  
+                  if (!currentWord) {
+                    return (
+                      <Card className="text-center p-8">
+                        <BookOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                        <h3 className="text-lg font-medium mb-2">No basic words available</h3>
+                        <p className="text-muted-foreground mb-4">
+                          {isTeacher ? 'Add some basic words to get started!' : 'Your teacher will add basic words soon.'}
+                        </p>
+                      </Card>
+                    );
+                  }
+
+                  return (
+                    <Card>
+                      <CardHeader>
+                        <div className="flex justify-between items-center">
+                          <CardTitle className="text-center flex-1">
+                            મૂળભૂત શબ્દો (Basic Words)
+                          </CardTitle>
+                          <Badge variant="secondary">
+                            {currentWordIndex + 1} / {basicWords.length}
+                          </Badge>
                         </div>
-                        {currentItem?.transliteration && (
-                          <div className="text-xl text-muted-foreground">
-                            ({currentItem.transliteration})
+                        <CardDescription className="text-center">
+                          Learn essential Gujarati vocabulary with English meanings
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        {/* Word Display in Word Bank Format */}
+                        <div className="text-center space-y-4 p-8 bg-muted/30 rounded-lg">
+                          <div className="text-4xl font-bold text-primary">
+                            {currentWord.gujarati_content}
+                          </div>
+                          <div className="text-2xl text-muted-foreground">
+                            ({currentWord.english_content})
+                          </div>
+                        </div>
+
+                        {/* Usage Example */}
+                        {currentWord.transliteration && (
+                          <div className="space-y-4 p-6 border-l-4 border-primary bg-primary/5 rounded-r-lg">
+                            <h4 className="font-semibold text-lg text-primary">Usage Example:</h4>
+                            <div className="text-xl font-medium text-foreground">
+                              {currentWord.transliteration}
+                            </div>
                           </div>
                         )}
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <div>{currentItem?.english_content}</div>
-                        <div className="text-2xl text-muted-foreground">
-                          What is this in Gujarati?
-                        </div>
-                      </div>
-                    )}
-                  </div>
 
-                  <div className="flex justify-center gap-4">
-                    {!showAnswer ? (
-                      <Button onClick={() => setShowAnswer(true)} size="lg">
-                        <BookOpen size={20} className="mr-2" />
-                        Show Answer
-                      </Button>
-                    ) : (
-                      <>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => playAudio(currentItem?.gujarati_content || '')}
-                          className="gap-2"
-                        >
-                          <Volume2 size={16} />
-                          Play Audio
-                        </Button>
-                        <div className="flex gap-4">
+                        {/* Audio Control */}
+                        <div className="flex justify-center">
                           <Button
-                            onClick={() => markItemLearned(false)}
                             variant="outline"
-                            size="lg"
+                            onClick={() => playAudio(currentWord.gujarati_content)}
                             className="gap-2"
                           >
-                            <X size={20} />
-                            Need Practice
-                          </Button>
-                          <Button
-                            onClick={() => markItemLearned(true)}
-                            size="lg"
-                            className="gap-2"
-                          >
-                            <Check size={20} />
-                            Got It!
+                            <Volume2 size={16} />
+                            Play Audio
                           </Button>
                         </div>
-                      </>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+
+                        {/* Navigation Buttons */}
+                        <div className="flex justify-between items-center pt-6">
+                          <Button
+                            variant="outline"
+                            onClick={() => navigateBasicWord('prev')}
+                            className="flex items-center gap-2 px-6 py-3"
+                            size="lg"
+                          >
+                            <ChevronLeft className="w-5 h-5" />
+                            Previous Word
+                          </Button>
+                          
+                          <div className="text-center">
+                            <div className="text-sm text-muted-foreground">Difficulty Level</div>
+                            <div className="text-lg font-semibold">{currentWord.difficulty_level}</div>
+                            {currentProgress?.is_learned && (
+                              <Badge variant="default" className="mt-1">Learned</Badge>
+                            )}
+                          </div>
+                          
+                          <Button
+                            onClick={() => navigateBasicWord('next')}
+                            className="flex items-center gap-2 px-6 py-3"
+                            size="lg"
+                          >
+                            Next Word
+                            <ChevronRight className="w-5 h-5" />
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })()}
+              </div>
             )}
           </TabsContent>
         </Tabs>
