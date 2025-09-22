@@ -504,75 +504,84 @@ const Practice = () => {
                     </>
                   ) : (
                     /* Numbers Grid Layout */
-                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                       {basicItems.map((item) => {
                         const progress = learningProgress.find(p => p.content_id === item.id);
                         return (
-                          <div key={item.id} className={`flex flex-col items-center p-4 border rounded-lg hover:bg-muted/50 transition-colors relative group ${progress?.is_learned ? 'bg-green-50 border-green-200' : ''}`}>
-                            {isTeacher && (
-                              <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleEdit(item)}
-                                  className="w-6 h-6 p-0"
-                                >
-                                  <Edit size={10} />
-                                </Button>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleDelete(item)}
-                                  className="w-6 h-6 p-0 text-red-500 hover:text-red-600"
-                                >
-                                  <Trash2 size={10} />
-                                </Button>
-                              </div>
-                            )}
-                            <div className="text-5xl font-bold text-primary mb-2">
-                              {item.gujarati_content}
-                            </div>
-                            <div className="text-lg font-semibold text-secondary-foreground mb-2">
-                              {item.english_content}
-                            </div>
-                            <div className="flex gap-2 mt-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => playAudio(item.gujarati_content)}
-                                className="w-8 h-8 p-0"
-                              >
-                                <Volume2 size={12} />
-                              </Button>
-                              {progress?.is_learned ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setCurrentIndex(basicItems.findIndex(i => i.id === item.id));
-                                    markItemLearned(false);
-                                  }}
-                                  className="w-8 h-8 p-0 text-orange-500"
-                                  title="Mark as need practice"
-                                >
-                                  <X size={12} />
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setCurrentIndex(basicItems.findIndex(i => i.id === item.id));
-                                    markItemLearned(true);
-                                  }}
-                                  className="w-8 h-8 p-0 text-green-500"
-                                  title="Mark as learned"
-                                >
-                                  <Check size={12} />
-                                </Button>
+                          <Card key={item.id} className={`relative group min-h-[160px] transition-colors ${progress?.is_learned ? 'bg-green-50 border-green-200' : ''}`}>
+                            <CardContent className="p-4 h-full flex flex-col justify-between">
+                              {isTeacher && (
+                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleEdit(item)}
+                                    className="w-6 h-6 p-0"
+                                  >
+                                    <Edit size={10} />
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleDelete(item)}
+                                    className="w-6 h-6 p-0 text-red-500 hover:text-red-600"
+                                  >
+                                    <Trash2 size={10} />
+                                  </Button>
+                                </div>
                               )}
-                            </div>
-                          </div>
+                              <div className="flex-1 flex flex-col items-center justify-center text-center space-y-2">
+                                <div className="text-3xl font-bold text-primary break-words max-w-full leading-tight">
+                                  {item.gujarati_content}
+                                </div>
+                                <div className="text-sm font-semibold text-secondary-foreground break-words max-w-full">
+                                  {item.english_content}
+                                </div>
+                                {item.order_sequence && (
+                                  <div className="text-xs text-muted-foreground">
+                                    {item.order_sequence}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex gap-2 justify-center mt-3">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => playAudio(item.gujarati_content)}
+                                  className="w-8 h-8 p-0"
+                                >
+                                  <Volume2 size={12} />
+                                </Button>
+                                {progress?.is_learned ? (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setCurrentIndex(basicItems.findIndex(i => i.id === item.id));
+                                      markItemLearned(false);
+                                    }}
+                                    className="w-8 h-8 p-0 text-orange-500"
+                                    title="Mark as need practice"
+                                  >
+                                    <X size={12} />
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => {
+                                      setCurrentIndex(basicItems.findIndex(i => i.id === item.id));
+                                      markItemLearned(true);
+                                    }}
+                                    className="w-8 h-8 p-0 text-green-500"
+                                    title="Mark as learned"
+                                  >
+                                    <Check size={12} />
+                                  </Button>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
                         );
                       })}
                     </div>
